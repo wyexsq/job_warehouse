@@ -1,21 +1,27 @@
 # job_warehouse
 
-一个基于招聘数据的数据仓库
+基于招聘数据的四层数据仓库项目
 
+## 项目架构
 
+ODS → DWD → DWS → ADS
 
-这个项目主要是为了理解 ODS → DWD → DWS → ADS，这个流程。
+- ODS：原始招聘数据，从天池Excel数据集批量导入，保留原始字段不做转换
+- DWD：数据清洗层，去除首尾空格，过滤异常薪资，计算月薪中位数
+- DWS：按城市、学历聚合统计岗位数量和平均月薪
+- ADS：Top10城市岗位排名、各学历薪资对比
 
-​	ODS:因为我的目的是走一遍，理解工程，所以这个项目我没有把重心过多放在爬虫，我从天池找了一个现成的
+## 技术栈
 
-​	DWD：这个我其实推翻重新做了一次，原因是后面的DWS层有问题，因为有的学历要求字段有空格，后面分析的结果就是不好。然后重新在建表的时候对数据进行处理，一开始存入都是用text，那这里就根据情况处理好。
+PostgreSQL / Python / pandas / Apache Airflow / WSL/docker
 
-​	DWS：我接下来就根据城市，学历和行业（这个弄结果不好，我不甘心，后面想想办法）。
+## 调度
 
-​	ADS: 根据上面的表，分析了岗位最多的前十名城市，并计算平均月薪（没有算年薪，不知道是几薪，不好比）
+Airflow DAG每日定时执行完整流水线，ODS→DWD→DWS→ADS依次重建
 
-​						然后还分析的不同学历要求的岗位数量和月薪
+## 运行
 
-
-
-技术栈：docker（部署PostgreSQL），linux（WSL）:后面用来做airflow调度，python，SQL
+1. 安装依赖：`pip install pandas psycopg2-binary openpyxl apache-airflow`
+2. 初始化数据库：执行 `sql/init_db.sql`
+3. 启动Airflow：`airflow standalone`
+4. 在Web UI触发DAG：`job_warehouse_pipeline`
